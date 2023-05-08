@@ -30,19 +30,7 @@
         <!-- 悬浮按钮 -->
         <div class="float-buttons" v-show="ifStart">
           <el-button type="success" icon="el-icon-check" circle class="success-btn" @click="like"></el-button>
-        <!--刷新悬浮框-->
-<!--          <el-popover-->
-<!--            placement="top"-->
-<!--            width="160"-->
-<!--            v-model="visible">-->
-<!--            <p>这是一段内容这是一段内容确定删除吗？</p>-->
-<!--            <div style="text-align: right; margin: 0">-->
-<!--              <el-button size="mini" type="text" @click="visible = false">取消</el-button>-->
-<!--              <el-button type="primary" size="mini" @click="visible = false">确定</el-button>-->
-<!--            </div>-->
-<!--            <el-button slot="reference">删除</el-button>-->
-<!--          </el-popover>-->
-          <el-button type="primary" icon="el-icon-refresh" circle class="danger-btn" @click="flush"></el-button>
+          <el-button type="primary" icon="el-icon-refresh" circle class="danger-btn" @click="getflush"></el-button>
           <el-button type="primary" icon="el-icon-caret-left" circle class="left-btn" @click="getPreArticle"></el-button>
           <el-button type="primary" icon="el-icon-caret-right" circle class="right-btn" @click="getNextArticle"></el-button>
         </div>
@@ -50,9 +38,8 @@
 </template>
 
 <script>
-let aid = {id: 1,}
-let ids=[]
-
+let aid = {id: 1}
+let cid=0;
 let currentPage = 1;
 export default {
   data() {
@@ -60,6 +47,7 @@ export default {
       ifStart: false,
       showFull: false,
       ifloding: false,
+      ids: [],
       articles: [
         {
           url: '',
@@ -72,8 +60,8 @@ export default {
     }
   },
   methods: {
-    setCurrentArticle(id){
-      aid.id=id
+    setCurrentArticle(){
+      aid.id=this.ids[currentPage-1]
       this.$api.article.getArticle(aid)
         .then((res) => {
           this.articles[0].title=res.data.title
@@ -85,8 +73,8 @@ export default {
     },
     startReading(){
       this.ifloding = true;
-      ids=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
-      this.setCurrentArticle(ids[0])
+      this.ids=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+      this.setCurrentArticle()
       this.ifStart = true;
     },
     getPreArticle(){
@@ -98,7 +86,7 @@ export default {
       }
       else {
         currentPage--
-        this.setCurrentArticle(ids[currentPage-1])
+        this.setCurrentArticle()
       }
     },
     getNextArticle(){
@@ -108,15 +96,17 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
+          this.flush()
           this.$message({
             type: 'success',
             message: '已为您生成新的文章队列!'
           });
+          this.setCurrentArticle()
         });
       }
       else {
         currentPage++
-        this.setCurrentArticle([currentPage-1])
+        this.setCurrentArticle()
       }
     },
     like() {
@@ -125,12 +115,25 @@ export default {
         type: 'success'
       });
     },
+    getflush() {
+      this.$confirm('是否刷新现有队列？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.flush()
+        this.$message({
+          type: 'success',
+          message: '已为您生成新的文章队列!'
+        });
+        this.setCurrentArticle()
+      });
+    },
     flush() {
-      ids.clean()
-      ids = [16,17,18,19,20,21,22,23,24,25,26,27,28,29,30]
       currentPage=1
-      this.setCurrentArticle(ids[currentPage-1])
-
+      this.ids.splice(0, this.ids.length);
+      this.ids = Array.from({ length: 15 }, (item, index) => index + 16);
+      this.setCurrentArticle()
     },
     toggleIframe() {
       this.showFull = !this.showFull
